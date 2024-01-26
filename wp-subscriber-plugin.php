@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WP Subscriber Plugin
  * Description: A simple subscription plugin.
- * Version: 0.37
+ * Version: 0.38
  * Author: Tom Kaczocha
  */
 
