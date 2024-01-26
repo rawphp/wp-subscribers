@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WP Subscriber Plugin
  * Description: A simple subscription plugin.
- * Version: 0.31
+ * Version: 0.32
  * Author: Tom Kaczocha
  */
 
@@ -22,6 +22,8 @@ add_action('admin_post_update_subscriber', 'my_update_subscriber');
 add_action('admin_post_delete_subscriber', 'my_delete_subscriber');
 add_action('admin_post_export_subscribers', 'my_export_subscribers');
 add_action('admin_enqueue_scripts', 'my_enqueue_admin_styles');
+add_action('wp_dashboard_setup', 'my_subscriber_add_dashboard_widgets');
+add_action('admin_enqueue_scripts', 'my_subscriber_admin_styles');
 
 register_activation_hook(__FILE__, 'my_create_subscribers_table');
 
@@ -412,4 +414,52 @@ function my_enqueue_admin_styles($hook)
         return;
     }
     wp_enqueue_style('my_admin_styles', plugin_dir_url(__FILE__) . 'admin-style.css');
+}
+
+function my_subscriber_add_dashboard_widgets() {
+    wp_add_dashboard_widget(
+        'my_subscriber_statistics',         // Widget slug.
+        'Subscriber Statistics',            // Title.
+        'my_subscriber_statistics_widget'   // Display function.
+    );
+    wp_add_dashboard_widget(
+        'my_subscriber_recent_activity',    // Widget slug.
+        'Recent Subscriber Activity',       // Title.
+        'my_subscriber_recent_activity_widget'  // Display function.
+    );
+}
+
+function my_subscriber_statistics_widget() {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'subscribers';
+    $total_subscribers = $wpdb->get_var("SELECT COUNT(*) FROM $table_name");
+
+    // Display total subscriber count
+    echo "<p>Total Subscribers: <strong>$total_subscribers</strong></p>";
+
+    // Add more statistics as needed
+}
+
+function my_subscriber_recent_activity_widget() {
+    global $wpdb;
+    $table_name = $wpdb->prefix . 'subscribers';
+    $recent_subscribers = $wpdb->get_results("SELECT * FROM $table_name ORDER BY id DESC LIMIT 5", ARRAY_A);
+
+    if (!empty($recent_subscribers)) {
+        echo "<ul>";
+        foreach ($recent_subscribers as $subscriber) {
+            echo "<li>{$subscriber['name']} - <em>{$subscriber['email']}</em></li>";
+        }
+        echo "</ul>";
+    } else {
+        echo "<p>No recent subscriber activity.</p>";
+    }
+}
+
+function my_subscriber_admin_styles($hook) {
+    if ('index.php' !== $hook) { // Ensure styles only loaded on the dashboard
+        return;
+    }
+
+    wp_enqueue_style('my_subscriber_dashboard_styles', plugin_dir_url(__FILE__) . 'css/dashboard-widgets.css');
 }
