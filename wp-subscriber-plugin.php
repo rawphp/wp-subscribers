@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WP Subscriber Plugin
  * Description: A simple subscription plugin.
- * Version: 0.23
+ * Version: 0.31
  * Author: Tom Kaczocha
  */
 
@@ -12,6 +12,7 @@ if (!defined('ABSPATH')) {
 
 // Register shortcode and AJAX actions on init
 add_action('init', 'register_my_subscriber_shortcodes');
+add_action('admin_init', 'my_subscriber_register_settings');
 add_action('wp_ajax_save_subscriber', 'my_save_subscriber');
 add_action('wp_ajax_nopriv_save_subscriber', 'my_save_subscriber');
 add_action('wp_enqueue_scripts', 'my_enqueue_scripts');
@@ -32,16 +33,31 @@ function register_my_subscriber_shortcodes()
     add_shortcode('subscriber_form', 'my_subscriber_form');
 }
 
+function my_subscriber_register_settings() {
+    add_option('my_subscriber_recaptcha_enabled', '');
+    add_option('my_subscriber_recaptcha_site_key', '');
+    add_option('my_subscriber_recaptcha_secret_key', '');
+    register_setting('my_subscriber_settings_group', 'my_subscriber_recaptcha_enabled');
+    register_setting('my_subscriber_settings_group', 'my_subscriber_recaptcha_site_key');
+    register_setting('my_subscriber_settings_group', 'my_subscriber_recaptcha_secret_key');
+}
+
 /**
  * Outputs the subscription form HTML.
  */
 function my_subscriber_form()
 {
+    $recaptcha_enabled = get_option('my_subscriber_recaptcha_enabled');
+    $recaptcha_site_key = get_option('my_subscriber_recaptcha_site_key');
+
     ob_start();
     ?>
     <form id="subscriber-form">
         <input type="text" name="name" placeholder="Name" required>
         <input type="email" name="email" placeholder="Email" required>
+        <?php if ($recaptcha_enabled == '1') { ?>
+        <div class="g-recaptcha" data-sitekey="<?php echo esc_attr($recaptcha_site_key); ?>"></div>
+        <?php } ?>
         <button type="submit">Subscribe</button>
     </form>
     <div id="form-message"></div>
@@ -55,7 +71,27 @@ function my_subscriber_form()
 function my_save_subscriber()
 {
     global $wpdb;
+    $recaptcha_enabled = get_option('my_subscriber_recaptcha_enabled');
+    $recaptcha_secret_key = get_option('my_subscriber_recaptcha_secret_key');
     $table_name = $wpdb->prefix . 'subscribers';
+
+    if ($recaptcha_enabled == '1') {
+        $recaptcha_response = $_POST['g-recaptcha-response'];
+        $response = wp_remote_post('https://www.google.com/recaptcha/api/siteverify', [
+            'body' => [
+                'secret' => $recaptcha_secret_key,
+                'response' => $recaptcha_response,
+            ]
+        ]);
+
+        $response_body = wp_remote_retrieve_body($response);
+        $result = json_decode($response_body);
+
+        if (!$result->success) {
+            wp_send_json_error('CAPTCHA verification failed');
+            return;
+        }
+    }
 
     $name = sanitize_text_field($_POST['name']);
     $email = sanitize_email($_POST['email']);
@@ -75,7 +111,16 @@ function my_save_subscriber()
 function my_enqueue_scripts()
 {
     wp_enqueue_script('my-subscriber-script', plugin_dir_url(__FILE__) . 'js/subscriber.js', ['jquery'], null, true);
+    wp_enqueue_script('google-recaptcha', 'https://www.google.com/recaptcha/api.js', [], null, true);
     wp_localize_script('my-subscriber-script', 'mySubscriberAjax', ['ajaxurl' => admin_url('admin-ajax.php')]);
+
+    $recaptcha_enabled = get_option('my_subscriber_recaptcha_enabled');
+    $recaptcha_site_key = get_option('my_subscriber_recaptcha_site_key');
+
+    if ($recaptcha_enabled == '1') {
+        // Localize script to pass the Site Key to JavaScript
+        wp_localize_script('my-subscriber-script', 'recaptcha', ['site_key' => $recaptcha_site_key]);
+    }
 }
 
 /**
@@ -145,6 +190,7 @@ function my_subscribers_page()
         <div class="nav-tab-wrapper">
             <a href="#view-subscribers" class="nav-tab nav-tab-active" id="view-tab">Subscribers</a>
             <a href="#import-subscribers" class="nav-tab" id="import-tab">Import</a>
+            <a href="#settings-subscribers" class="nav-tab" id="import-tab">Settings</a>
         </div>
 
         <!-- View Subscribers Tab -->
@@ -202,6 +248,29 @@ function my_subscribers_page()
                 <input type="hidden" name="action" value="import_subscribers">
                 <input type="file" name="subscribers_csv" accept=".csv">
                 <input type="submit" value="Import CSV" class="button action">
+            </form>
+        </div>
+
+        <!-- Settings Tab -->
+        <div id="settings-subscribers" class="tab-content" style="display: none">
+            <h3>Settings</h3>
+            <form method="post" action="options.php">
+                <?php settings_fields('my_subscriber_settings_group'); ?>
+                <table class="form-table">
+                    <tr valign="top">
+                        <th scope="row">Enable reCAPTCHA</th>
+                        <td><input type="checkbox" name="my_subscriber_recaptcha_enabled" value="1" <?php checked(get_option('my_subscriber_recaptcha_enabled'), 1); ?> /></td>
+                    </tr>
+                    <tr valign="top">
+                        <th scope="row">reCAPTCHA Site Key</th>
+                        <td><input type="text" name="my_subscriber_recaptcha_site_key" value="<?php echo esc_attr(get_option('my_subscriber_recaptcha_site_key')); ?>" /></td>
+                    </tr>
+                    <tr valign="top">
+                        <th scope="row">reCAPTCHA Secret Key</th>
+                        <td><input type="text" name="my_subscriber_recaptcha_secret_key" value="<?php echo esc_attr(get_option('my_subscriber_recaptcha_secret_key')); ?>" /></td>
+                    </tr>
+                </table>
+                <?php submit_button(); ?>
             </form>
         </div>
     </div>
