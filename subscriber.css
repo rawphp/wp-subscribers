@@ -1,0 +1,28 @@
+#subscriber-form {
+    display: flex;
+    flex-direction: column;
+    max-width: 300px;
+    margin: 0 auto;
+}
+
+#subscriber-form input[type="text"],
+#subscriber-form input[type="email"] {
+    margin-bottom: 10px;
+    padding: 8px;
+}
+
+#subscriber-form button {
+    padding: 10px;
+    background-color: #0073aa;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+#subscriber-form button:hover {
+    background-color: #005177;
+}
+
+#form-message {
+    margin-top: 10px;
+}
