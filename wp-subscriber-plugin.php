@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WP Subscriber Plugin
  * Description: A simple subscription plugin.
- * Version: 0.32
+ * Version: 0.37
  * Author: Tom Kaczocha
  */
 
@@ -24,6 +24,7 @@ add_action('admin_post_export_subscribers', 'my_export_subscribers');
 add_action('admin_enqueue_scripts', 'my_enqueue_admin_styles');
 add_action('wp_dashboard_setup', 'my_subscriber_add_dashboard_widgets');
 add_action('admin_enqueue_scripts', 'my_subscriber_admin_styles');
+add_action('wp_enqueue_scripts', 'my_enqueue_form_styles');
 
 register_activation_hook(__FILE__, 'my_create_subscribers_table');
 
@@ -462,4 +463,9 @@ function my_subscriber_admin_styles($hook) {
     }
 
     wp_enqueue_style('my_subscriber_dashboard_styles', plugin_dir_url(__FILE__) . 'css/dashboard-widgets.css');
+}
+
+function my_enqueue_form_styles() {
+    // Use plugin_dir_url() to get the correct path to your stylesheet
+    wp_enqueue_style('my-subscriber-form-styles', plugin_dir_url(__FILE__) . 'css/subscription-form-styles.css');
 }
