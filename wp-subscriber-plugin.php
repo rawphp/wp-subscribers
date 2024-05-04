@@ -17,7 +17,7 @@ add_action('wp_ajax_save_subscriber', 'my_save_subscriber');
 add_action('wp_ajax_nopriv_save_subscriber', 'my_save_subscriber');
 add_action('wp_enqueue_scripts', 'my_enqueue_scripts');
 add_action('admin_menu', 'my_add_admin_menu');
-add_action('admin_post_import_subscribers', 'my_import_subscribers');``
+add_action('admin_post_import_subscribers', 'my_import_subscribers');
 add_action('admin_post_update_subscriber', 'my_update_subscriber');
 add_action('admin_post_delete_subscriber', 'my_delete_subscriber');
 add_action('admin_post_export_subscribers', 'my_export_subscribers');
