@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WP Subscriber Plugin
  * Description: A simple subscription plugin.
- * Version: 0.38
+ * Version: 0.39`
  * Author: Tom Kaczocha
  */
 
@@ -17,7 +17,7 @@ add_action('wp_ajax_save_subscriber', 'my_save_subscriber');
 add_action('wp_ajax_nopriv_save_subscriber', 'my_save_subscriber');
 add_action('wp_enqueue_scripts', 'my_enqueue_scripts');
 add_action('admin_menu', 'my_add_admin_menu');
-add_action('admin_post_import_subscribers', 'my_import_subscribers');
+add_action('admin_post_import_subscribers', 'my_import_subscribers');``
 add_action('admin_post_update_subscriber', 'my_update_subscriber');
 add_action('admin_post_delete_subscriber', 'my_delete_subscriber');
 add_action('admin_post_export_subscribers', 'my_export_subscribers');
@@ -418,16 +418,18 @@ function my_enqueue_admin_styles($hook)
 }
 
 function my_subscriber_add_dashboard_widgets() {
-    wp_add_dashboard_widget(
-        'my_subscriber_statistics',         // Widget slug.
-        'Subscriber Statistics',            // Title.
-        'my_subscriber_statistics_widget'   // Display function.
-    );
-    wp_add_dashboard_widget(
-        'my_subscriber_recent_activity',    // Widget slug.
-        'Recent Subscriber Activity',       // Title.
-        'my_subscriber_recent_activity_widget'  // Display function.
-    );
+    if (current_user_can('manage_options')) { // Check if the current user is an Administrator
+        wp_add_dashboard_widget(
+            'my_subscriber_statistics',         // Widget slug.
+            'Subscriber Statistics',            // Title.
+            'my_subscriber_statistics_widget'   // Display function.
+        );
+        wp_add_dashboard_widget(
+            'my_subscriber_recent_activity',    // Widget slug.
+            'Recent Subscriber Activity',       // Title.
+            'my_subscriber_recent_activity_widget'  // Display function.
+        );
+    }
 }
 
 function my_subscriber_statistics_widget() {
