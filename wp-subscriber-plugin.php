@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: WP Subscriber Plugin
- * Description: A simple subscription plugin.
- * Version: 0.40
+ * Description: WP Subscriber Plugin is a simple yet powerful WordPress plugin designed to manage and grow your subscriber list. This plugin allows visitors to subscribe to your newsletter via a form and provides administrators with the ability to manage subscribers directly from the WordPress dashboard.
+ * Version: 0.41
  * Author: Tom Kaczocha
  */
 
